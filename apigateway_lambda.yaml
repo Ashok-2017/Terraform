@@ -39,3 +39,61 @@ Parameters:
         value: development
       prod:
         value: production
+ Globals:
+   Function:
+     Timeout: 30
+     MemorySize: 512
+     Runtime: java8
+     Tags:
+       environment: !FindInMap
+         - Environment
+         - !Ref Env
+         - Value
+       version: !Sub "${Version}"
+  Resources:
+    HandlePostEmail:
+      Type: AWS::Serverless::Function
+      Properties:
+        FunctionName: !sub lambda-${Env}-handle-post-email-${RegionCode}-all
+        Description: email-handle-post-email
+        Handler: com.marketing.email.Handler::handleRequest
+      CodeUri:
+        Bucket: !Ref ArtifactsBucket
+        Key: !Sub ${JarFileName}
+      Role: !GetAtt HandlePostEmailRole.Arn
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          SQS_URL_FOR_REQUESTS_TO_ANALYTICS_PLATFORM: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${EmailToAnalyticsQueueName}"
+          FIFO_SQS_URL_FOR_REQUESTS_TO_ADOBE: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${EmailToAcsFifoQueueName}"
+          SQS_URL_FOR_RAW_REQUESTS_AND_RESPONSE: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${SaveEmailResponsesToS3QueueName}"
+          SQS_URL_FOR_RAW_REQUESTS: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${SaveEmailRawToS3QueueName}"
+     HandlePostEmailPermission:
+        Type: "AWS::Lambda::Permission"
+        DependsOn:
+          - HandlePostEmail
+        Properties:
+          Action: lambda:InvokeFunction
+          FunctionName: !Ref HandlePostEmail
+          principal: apigateway.amazonaws.com
+    HandlePostEmailRole:
+       Type: "AWS::IAM::Role"
+       Properties:
+         RoleName: !Sub aws-sam-HandlePostEmailRole-${Env}
+         AssumeRolePolicyDocument:
+           Version: "2012-10-17"
+           Statement:
+             - Effect: Allow
+               Principal: 
+                 Service:
+                 - lambda.amazonaws.com
+               Action:
+                 - 'sts: AssumeRole'
+         Policies:
+           - PolicyName:  !Sub HandlePostEmailPolicy-${Env}
+             PolicyDocument:
+               Version: "2012-10-17"
+               Statement:
+               - Effect:  Allow
+                 Action: 
+                  -  sqs: SendMessage*  
