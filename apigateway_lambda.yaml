@@ -1,1 +1,41 @@
-
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for RAF Campagian Rest API
+Parameters:
+  ArtifactsBucket:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'ArtifactsBucketName'
+  LinkQueueName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'LinkQueueName'
+  EmailToAnalyticsQueueName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'EmailToAnalyticsQueueName'
+  SaveEmailResponsesToS3QueueName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'SaveEmailResponsesToS3QueueName'
+  S3QueueName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'S3QueueName'
+  JarFileName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/_env/artifacts/s3/path/HttpHandlerJar'
+  LinkJarFileName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/_env/artifacts/s3/path/LinkHandlerJar'
+  Version:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/_env/VersionOfJar'
+  Env: 
+    Type: String
+    Description: prod/dev/stg
+  RegionCode:
+    Type: String
+    Description: e.g for us-east-1
+  Mappings:
+    Environment: 
+      stg:
+        value: staging
+      dev:
+        value: development
+      prod:
+        value: production
