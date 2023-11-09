@@ -97,3 +97,31 @@ Parameters:
                - Effect:  Allow
                  Action: 
                   -  sqs: SendMessage*  
+                 Resource:
+                   - Fn::Sub:
+                       - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                       - queueName: !Ref EmailToFifoQueueName
+                   - Fn::Sub:
+                       - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                       - queueName: !Ref SaveEmailResponsesToS3QueueName
+                   - Fn::Sub:
+                       - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                       - queueName: !Ref EmailToAnalyticsQueueName
+                   - Fn::Sub:
+                       - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                       - queueName: !Ref SaveEmailRawToS3QueueName
+                - Efeect: Allow
+                  Action: 
+                    - kms:GenerateDataKey
+                    - kms: Decrypt
+                  Resource:
+                    - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/mapi-sqs-${Env}-key
+               - Efeect: Allow
+                 Action:
+                   - cloudwatch: PutMetricData
+                 Resource: *
+               - Effect: Allow
+                 Action:
+                   - logs: *
+                 Resource: arn:aws:logs:*:*:*  
+                    
