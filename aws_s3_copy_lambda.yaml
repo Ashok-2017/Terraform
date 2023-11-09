@@ -88,6 +88,224 @@ Resources:
                 Fn::Sub:
                 - arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${parameterName}
                 - parameterName: !Sub "${Env}/*"
-                
-    
+
+           - Effect: Allow
+             Action:
+               - dynamodb: GetItem
+               - dynamodb: DeleteItem
+               - dynamodb: PutItem
+               - dynamodb: Scan
+               - dynamodb: Query
+               -  dynamodb: UpdateItem
+               -  dynamodb: BatchWriteItem
+               - dynamodb: BatchGetItem
+              - dynamodb: DescribeTable
+              - dynamodb: ConditionCheckItem
+              - dynamodb: UpdateTable
+            Resource:
+              - !Sub
+              - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+              - tableName: "*"
+
+            - Effect: Allow
+              Action:
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:GetBucketLocation
+              - s3:GetObjectVersion
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:GetLifecycleConfiguration
+              - s3:PutLifecycleConfiguration
+              - s3:DeleteObject
+              Resource:
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: RawBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: RawBucketName
+
+            - Effect: Allow
+              Action:
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:GetBucketLocation
+              - s3:GetObjectVersion
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:GetLifecycleConfiguration
+              - s3:PutLifecycleConfiguration
+              - s3:DeleteObject
+              Resource:
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: ExchangeBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: ExchangeBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: SnowflakeExternalStageBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: SnowflakeExternalStageBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: DgoExchangeBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: ExchangeBucketName
+
+             - Effect: Allow
+               Action:
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:GetBucketLocation
+                - s3:GetObjectVersion
+              Resource:
+                - Fn::Sub:
+                  - arn:${AWS::Partition}:s3:::${bucketName}
+                  - bucketName: !Sub s3-${Env}-data-exchange-bucket-${RegionCode}-all
+                - Fn::Sub:
+                  - arn:${AWS::Partition}:s3:::${bucketName}
+                  - bucketName: !Sub s3-${Env}-data-exchange-bucket-${RegionCode}-all/*
+
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+
+            - Effect: Allow
+              Action:
+                - logs:*
+              Resource: arn:aws:logs:*:*:*
+
+  S3ProdCopyAppRole:
+    Type: "AWS::IAM::Role"
+    Condition: CreateProd
+    Properties:
+      RoleName: !Sub aws-sam-S3CopyAppRole-${Env}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName:  !Sub S3CopyAppPolicy-${Env}
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+
+            - Effect: Allow
+              Action:
+              - ssm:DescribeParameters
+              Resource: "*"
+            - Effect: Allow
+              Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+              - ssm:GetParametersByPath
+              Resource:
+                Fn::Sub:
+                - arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${parameterName}
+                - parameterName: !Sub "${Env}/*"
+
+            - Effect: Allow
+              Action:
+              - dynamodb:GetItem
+              - dynamodb:DeleteItem
+              - dynamodb:PutItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:BatchGetItem
+              - dynamodb:DescribeTable
+              - dynamodb:ConditionCheckItem
+              - dynamodb:UpdateTable
+              Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - tableName: "*"
+
+            - Effect: Allow
+              Action:
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:GetBucketLocation
+              - s3:GetObjectVersion
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:GetLifecycleConfiguration
+              - s3:PutLifecycleConfiguration
+              - s3:DeleteObject
+              Resource:
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: RawBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: RawBucketName
+
+            - Effect: Allow
+              Action:
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:GetBucketLocation
+              - s3:GetObjectVersion
+              - s3:PutObject
+              - s3:PutObjectAcl
+              - s3:GetLifecycleConfiguration
+              - s3:PutLifecycleConfiguration
+              - s3:DeleteObject
+              Resource:
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: ExchangeBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: ExchangeBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: SnowflakeExternalStageBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: SnowflakeExternalStageBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}
+                - bucketName:
+                    Ref: DgoExchangeBucketName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - bucketName:
+                    Ref: DgoExchangeBucketName
+
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+
+            - Effect: Allow
+              Action:
+                - logs:*
+              Resource: arn:aws:logs:*:*:*
 
