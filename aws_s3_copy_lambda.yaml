@@ -1,1 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template Copy from S3 to App
+Parameters:
+  ArtifactsBucket:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'ArtifactsBucket'
+  RawBucketName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'RawBucketName'
+  ExchangeBucketName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'ExchangeBucketName'
+  SnowflakeExternalStageBucketName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'SnowflakeExternalStageBucketName'
+  DgoExchangeBucketName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: 'DgoExchangeBucketName'
+  JarFileName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/_env/artifacts/s3/path/S3CopyJar'
+  Version:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/_env/VersionOfJar'
+Conditions:
+  CreateDevStg: !Or [!Equals [!Ref "Env" dev], !Equals [!Ref "Env", stg]]
+  CreateProd: !Equals [!Ref "Env", prod]
+
+Mappings: 
+  Environment:
+    stg:
+      Value: staging
+    dev:
+      Value: development
+    prod:
+      Value: production
+Resources:
+  S3CopyApp:
+    Type: AWS::Serverless::Function
+     
+
+  
+    
 
