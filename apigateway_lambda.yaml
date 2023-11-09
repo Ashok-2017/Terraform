@@ -124,4 +124,85 @@ Parameters:
                  Action:
                    - logs: *
                  Resource: arn:aws:logs:*:*:*  
-                    
+           HandlePutLink:
+             Type: AWS::Serverless::Function
+             Properties:
+               FunctionName: !Sub oma-lambda-${Env}-handle-post-link-${RegionCode}-all
+               Description: save link to s3
+               Handler: com.omf.analytics.marketing.raf.link.Handler::handleRequest
+               CodeUri:
+                 Bucket: !Ref ArtifactsBucket
+                 Key: !Sub ${LinkJarFileName}
+                 Role: !GetAtt HandlePutLinkRole.Arn
+                 Environment:
+                 Variables:
+                   REGION: !Ref AWS::Region
+                   SQS_URL_FOR_REQUESTS_TO_ANALYTICS_PLATFORM: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${LinkQueueName}"
+                   SQS_URL_FOR_RAW_REQUESTS_AND_RESPONSE: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${SaveLinkResponsesToS3QueueName}"
+                   SQS_URL_FOR_RAW_REQUESTS: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${SaveLinkRawToS3QueueName}"
+            HandlePutLinkPermission:
+              Type: "AWS::IAM::Role"
+              Properties:
+                RoleName:
+                  !Sub aws-sam-HandlePutLinkRole-${Env}
+                AssumeRolePolicyDocument:
+                  Version: "2012-10-17"
+                  Statement:
+                    - Effect: Allow
+                      Principal:
+                        Service:
+                        - lambda.amazonaws.com
+                        Action:
+                          - 'sts:AssumeRole'
+ Policies:
+        - PolicyName:  !Sub  HandlePutLinkPolicy-${Env}
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+
+            - Effect: Allow
+              Action:
+              - sqs:SendMessage*
+              Resource:
+              - Fn::Sub:
+                - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                - queueName: !Ref LinkQueueName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                - queueName: !Ref SaveLinkResponsesToS3QueueName
+              - Fn::Sub:
+                - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${queueName}
+                - queueName: !Ref SaveLinkRawToS3QueueName
+
+            - Effect: Allow
+              Action:
+                - kms:GenerateDataKey
+                - kms:Decrypt
+              Resource:
+                - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/mapi-sqs-${Env}-key
+
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+
+            - Effect: Allow
+              Action:
+                - logs:*
+              Resource: arn:aws:logs:*:*:*
+
+
+Outputs:
+
+  HandlePostEmail:
+    Description: "Get Details Function ARN"
+    Value: !GetAtt HandlePostEmail.Arn
+  HandlePutLink:
+    Description: "Get Details Function ARN"
+    Value: !GetAtt HandlePutLink.Arn
+
+
+
+
+
+                
