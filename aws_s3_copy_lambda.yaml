@@ -38,8 +38,56 @@ Mappings:
 Resources:
   S3CopyApp:
     Type: AWS::Serverless::Function
-     
-
-  
+    Properties:
+      FunctionName: !Sub "lambda-${Env}-s3-copy-app-${RegionCode}-all"
+      Handler: com.generic.s3.copy.GenericS3Copier::handleRequest
+      Runtime: java8
+      Timeout: 900
+      MemorySize: 512
+      Description: s3 copy app
+      CodeUri:
+        Bucket: !Ref ArtifactsBucket
+        key: !Sub ${JarFileName}
+      Role: !If [CreateDevStg!GetAtt S3CopyAppRole.Arn, !GetAtt S3ProdCopyAppRole.Arn]
+      Environment:
+        Variables:
+          GLOBAL_ENDPOINT_REGION: us-east-1
+          HIST_RUN_TABLE: !Sub "${Env}_ETLStateLog"
+          LAST_RUN_TABLE: !Sub "${Env}_ETLStateLastRunLog"
+      Tags:
+        version: !Sub ${Version}
+        environment: !FindInMap
+          - Environment
+          - !Ref Env
+          - Value
+      S3CopyAppRole:
+    Type: "AWS::IAM::Role"
+    Condition: CreateDevStg
+    Properties:
+      RoleName: !Sub aws-sam-S3CopyAppRole-${Env}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName:  !Sub S3CopyAppPolicy-${Env}
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action: 
+              - ssm: GetParameters
+              - ssm: GetParameter
+              - ssm: GetparametersByPath
+              Resource:
+                Fn::Sub:
+                - arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${parameterName}
+                - parameterName: !Sub "${Env}/*"
+                
     
 
